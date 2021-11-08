@@ -1,0 +1,23 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#game-box {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(100, 100, 100, 0.5);
+    padding: 30px;
+}
+
+button {
+    margin-bottom: 30px;
+}
+
+#join-btn {
+    margin: 0;
+}

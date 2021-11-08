@@ -1,0 +1,56 @@
+body {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#board {
+    width: min(100vh, 100vw);
+    height: min(100vh, 100vw);
+    background-color: black;
+}
+
+.board-row {
+    width: 100%;
+    height: calc(100% / 7);
+    border: 1px solid white;
+    display: flex;
+    justify-content: space-between;
+}
+
+.side {
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+.token {
+    height: 100%;
+    width: calc(min(100vh, 100vw) / 7);
+    border-radius: 50%;
+}
+
+.token-white {
+    background-color: white;
+}
+
+.spacer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+.placer {
+    min-width: calc(min(100vh, 100vw) / 7);
+    width: 50%;
+    height: 100%;
+    background: none
+}
+
+.placer:hover {
+    background-color: rgba(200, 200, 200, 0.5);
+}
