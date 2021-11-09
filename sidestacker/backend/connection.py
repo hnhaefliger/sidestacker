@@ -44,7 +44,7 @@ class Connection:
 
     async def receive(self, data):
         print(data)
-        await self.send('hello')
+        await self.send('move|' + data + 'white')
 
     async def disconnect(self):
         # end game
