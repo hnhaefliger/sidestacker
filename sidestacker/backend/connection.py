@@ -193,6 +193,7 @@ class GameState:
                     await self.send('move|' + move + self.turn)
 
                     if check_win(self.board, position[0], position[1]):
+                        self.winner = self.turn
                         await self.send('win|' + self.turn)
                         await self.end()
 
