@@ -72,11 +72,15 @@ socket.onmessage = function(message) {
             } else {
                 if (type == 'win') {
                     showMessage(`${content} won the game!`, true);
-                    
+
                     message_button.addEventListener('click', (e) => {
                         e.preventDefault();
                         document.location.href = 'http://localhost:8000/';
                     })
+                } else {
+                    if (type == 'end') {
+                        document.location.href = 'http://localhost:8000/';
+                    }
                 }
             }
         }

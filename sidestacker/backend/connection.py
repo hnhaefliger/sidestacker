@@ -1,4 +1,11 @@
 import uuid
+from asgiref.sync import sync_to_async
+
+# we need to load all django modules before importing any models
+import django
+django.setup()
+
+from .models import Game
 
 global GAMESTATES
 GAMESTATES = {}
@@ -18,7 +25,7 @@ class Connection:
                 await self.connect()
 
             if event['type'] == 'websocket.disconnect':
-                await self.disconnect()
+                await GAMESTATES[self.game_id].end()
                 break
 
             if event['type'] == 'websocket.receive':
@@ -53,8 +60,16 @@ class Connection:
         await GAMESTATES[self.game_id].move(self, data)
 
     async def disconnect(self):
-        # end game
-        pass
+        try:
+            await self.send('end')
+            await self.transfer({
+                'type': 'websocket.close',
+            })
+
+        except:
+            pass
+
+        del self
 
 
 class GameState:
@@ -65,6 +80,8 @@ class GameState:
         self.board = [['' for i in range(7)] for j in range(7)]
         self.moves = ''
         self.turn = 'white'
+        self.winner = 'none'
+        self.ended = False
 
     async def join(self, player):
         if not self.white:
@@ -86,18 +103,47 @@ class GameState:
 
     async def move(self, player, move):
         if (self.black != None) & (self.white != None):
-            # check legal move
+            x, y = int(move[1]), int(move[0])
 
-            self.moves += move
+            if (0 <= x and x < 2) and (0 <= y and y < 7):
+                if ((player == self.black) and (self.turn == 'black')) or ((player == self.white) and (self.turn == 'white')):
+                    self.moves += move
+                    
+                    if x == 0:
+                        for i in range(7):
+                            if self.board[y][i] == '':
+                                self.board[y][i] = self.turn
+                                break
 
-            if (player == self.black) & (self.turn == 'black'):
-                await self.send('move|' + move + 'black')
-                self.turn = 'white'
+                    else:
+                        for i in range(1, 8):
+                            if self.board[y][-i] == '':
+                                self.board[y][-i] = self.turn
+                                break
 
-            elif (player == self.white) & (self.turn == 'white'):
-                await self.send('move|' + move + 'white')
-                self.turn = 'black'
+                    await self.send('move|' + move + self.turn)
+                    self.turn = 'white' if self.turn == 'black' else 'black'
 
-            # check winner
+    async def end(self):
+        if not self.ended:
+            self.ended = True
 
-            # if winner save game and disconnect
+            if self.white != None:
+                await self.white.disconnect()
+
+            if self.black != None:
+                await self.black.disconnect()
+
+            if self.moves != '':
+                await sync_to_async(self.save_game)()
+
+            del GAMESTATES[self.game_id]
+
+    def save_game(self):
+        print(self.moves)
+
+        Game(
+            game_id=self.game_id,
+            moves=self.moves,
+            winner=self.winner,
+        ).save()
