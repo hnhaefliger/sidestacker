@@ -25,6 +25,9 @@ def check_win(board, x, y):
             if line == 4:
                 return True
 
+        else:
+            line = 0
+
     line = 0
 
     # Vertical
@@ -35,6 +38,9 @@ def check_win(board, x, y):
             if line == 4:
                 return True
 
+        else:
+            line = 0
+
     line = 0
 
     # Diagonal 1
@@ -44,6 +50,9 @@ def check_win(board, x, y):
 
             if line == 4:
                 return True
+            
+        else:
+            line = 0
 
     line = 0
 
@@ -54,6 +63,9 @@ def check_win(board, x, y):
 
             if line == 4:
                 return True
+
+        else:
+            line = 0
 
     return False
 
@@ -73,7 +85,9 @@ class Connection:
                 await self.connect()
 
             if event['type'] == 'websocket.disconnect':
-                await GAMESTATES[self.game_id].end()
+                if self.game_id in GAMESTATES:
+                    await GAMESTATES[self.game_id].end()
+
                 break
 
             if event['type'] == 'websocket.receive':
@@ -162,14 +176,17 @@ class GameState:
                     if x == 0:
                         for i in range(7):
                             if self.board[y][position[0]] == '':
-                                position[0] = i
                                 break
 
+                            position[0] += 1
+
                     else:
+                        position[0] = len(self.board[y]) - 1
                         for i in range(1, 8):
                             if self.board[y][-i] == '':
-                                position[0] = len(self.board[y]) - i
                                 break
+
+                            position[0] -= 1
 
                     self.board[position[1]][position[0]] = self.turn
 
@@ -195,6 +212,7 @@ class GameState:
                 await sync_to_async(self.save_game)()
 
             del GAMESTATES[self.game_id]
+
 
     def save_game(self):
         Game(

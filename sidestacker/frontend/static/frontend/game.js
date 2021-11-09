@@ -71,6 +71,8 @@ socket.onmessage = function(message) {
 
             } else {
                 if (type == 'win') {
+                    socket.close();
+
                     showMessage(`${content} won the game!`, true);
 
                     message_button.addEventListener('click', (e) => {
@@ -79,6 +81,8 @@ socket.onmessage = function(message) {
                     })
                 } else {
                     if (type == 'end') {
+                        socket.close();
+
                         document.location.href = 'http://localhost:8000/';
                     }
                 }
