@@ -58,4 +58,14 @@ function nextMove(game, color) {
     }
 }
 
-nextMove(game, 'white');
+if (game !== 'invalid') {
+    nextMove(game, 'white');
+
+} else {
+    showMessage('Invalid game id.')
+
+    message_button.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.location.href = 'http://localhost:8000/';
+    })
+}
