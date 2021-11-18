@@ -9,9 +9,12 @@ class Router:
 
     def __call__(self, scope, receive, send):
         match = self.pattern.match(scope['path'])
-
+        
         if match != None:
-            return Connection(scope, receive, send, self.application, **match[2])
+            application = self.application(**match[2])
+            application.setup(scope, receive, send)
+
+            return application
 
         else:
             return False

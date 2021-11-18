@@ -1,5 +1,6 @@
 import uuid
-from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync
+from .connection import Connection
 
 # we need to load all django modules before importing any models
 import django
@@ -58,7 +59,7 @@ def check_win(board, x, y):
 
     # Diagonal 2
     for i in range(min([b - a, d - c])):
-        if board[y][x] == board[c+i][b-i-1]:
+        if board[y][x] == board[c+i][b-i-2]:
             line += 1
 
             if line == 4:
@@ -70,40 +71,33 @@ def check_win(board, x, y):
     return False
 
 
-class LogicHandler:
+class LogicHandler(Connection):
     def __init__(self, game_id=''):
-        self.socket = None
         self.joined = False
         self.game_id = game_id
 
-    async def send(self, data):
-        if self.socket:
-            await self.socket.send({
-                'type': 'websocket.send',
-                'text': data
-            })
-
-    async def connect(self, socket):
-        self.socket = socket
-
-        await socket.accept()
+    def connect(self):
+        self.accept()
 
         if self.game_id != '':
             if self.game_id in GAMESTATES:
-                self.joined = await GAMESTATES[self.game_id].join(self)
+                self.joined = GAMESTATES[self.game_id].join(self)
             
         if not self.joined:
             self.game_id = str(uuid.uuid4())
             new_game = GameState(self.game_id)
-            self.joined = await new_game.join(self)
+            self.joined = new_game.join(self)
             GAMESTATES[self.game_id] = new_game
 
-    async def receive(self, socket, data):
-        await GAMESTATES[self.game_id].move(self, data)
 
-    async def disconnect(self, socket):
+    def receive(self, data):
+        GAMESTATES[self.game_id].move(self, data)
+
+
+    def disconnect(self):
         try:
-            await self.send('end')
+            self.send('end')
+            self.close()
 
         except:
             pass
@@ -122,25 +116,25 @@ class GameState:
         self.winner = 'none'
         self.ended = False
 
-    async def join(self, player):
+    def join(self, player):
         if not self.white:
             self.white = player
-            await self.white.send('wait|' + self.game_id)
+            self.white.send('wait|' + self.game_id)
             return True
 
         elif not self.black:
             self.black = player
-            await self.send('start')
+            self.send('start')
             return True
 
         else:
             return False
 
-    async def send(self, message): 
-        await self.white.send(message)
-        await self.black.send(message)
+    def send(self, message): 
+        self.white.send(message)
+        self.black.send(message)
 
-    async def move(self, player, move):
+    def move(self, player, move):
         if (self.black != None) & (self.white != None):
             x, y = int(move[1]), int(move[0])
 
@@ -167,27 +161,27 @@ class GameState:
 
                     self.board[position[1]][position[0]] = self.turn
 
-                    await self.send('move|' + move + self.turn)
+                    self.send('move|' + move + self.turn)
 
                     if check_win(self.board, position[0], position[1]):
                         self.winner = self.turn
-                        await self.send('win|' + self.turn)
-                        await self.end()
+                        self.send('win|' + self.turn)
+                        self.end()
 
                     self.turn = 'white' if self.turn == 'black' else 'black'
 
-    async def end(self):
-        if not self.ended:
+    def end(self):
+        if not self.ended: # prevent occasional duplicate calls because of both sockets
             self.ended = True
 
             if self.white != None:
-                await self.white.disconnect()
+                self.white.disconnect()
 
             if self.black != None:
-                await self.black.disconnect()
+                self.black.disconnect()
 
             if self.moves != '':
-                await sync_to_async(self.save_game)()
+                self.save_game()
 
             del GAMESTATES[self.game_id]
 
