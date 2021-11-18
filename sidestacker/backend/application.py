@@ -1,5 +1,14 @@
-from .connection import Connection
+from .urls import urlpatterns
+
 
 async def websocket_application(scope, receive, send):
-    connection = Connection(scope, receive, send)
-    await connection.start()
+    for router in urlpatterns:
+        match = router(scope, receive, send)
+
+        if match:
+            await match.start()
+
+    else:
+        await send({
+            'type': 'websocket.disconnect'
+        })

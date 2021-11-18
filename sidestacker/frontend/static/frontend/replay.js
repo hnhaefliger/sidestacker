@@ -54,7 +54,7 @@ function nextMove(game, color) {
 
         window.setTimeout(function () {
             nextMove(game.substring(2), color)
-        }, 5000);
+        }, 1000);
     }
 }
 
