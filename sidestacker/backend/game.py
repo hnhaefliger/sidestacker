@@ -1,5 +1,4 @@
 import uuid
-from asgiref.sync import sync_to_async, async_to_sync
 from .connection import Connection
 
 # we need to load all django modules before importing any models
