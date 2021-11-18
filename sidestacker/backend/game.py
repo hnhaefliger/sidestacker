@@ -12,65 +12,6 @@ global GAMESTATES
 GAMESTATES = {}
 
 
-def check_win(board, x, y):
-    a, b = max((0, x-3)), min((6, x+3)) + 1
-    c, d = max((0, y-3)), min((6, y+3)) + 1
-
-    line = 0
-
-    # Horizontal
-    for i  in range(b - a):
-        if board[y][x] == board[y][a+i]:
-            line += 1
-
-            if line == 4:
-                return True
-
-        else:
-            line = 0
-
-    line = 0
-
-    # Vertical
-    for i in range(d - c):
-        if board[y][x] == board[c+i][x]:
-            line += 1
-
-            if line == 4:
-                return True
-
-        else:
-            line = 0
-
-    line = 0
-
-    # Diagonal 1
-    for i in range(min([b - a, d - c])):
-        if board[y][x] == board[c+i][a+i]:
-            line += 1
-
-            if line == 4:
-                return True
-            
-        else:
-            line = 0
-
-    line = 0
-
-    # Diagonal 2
-    for i in range(min([b - a, d - c])):
-        if board[y][x] == board[c+i][b-i-2]:
-            line += 1
-
-            if line == 4:
-                return True
-
-        else:
-            line = 0
-
-    return False
-
-
 class LogicHandler(Connection):
     def __init__(self, game_id=''):
         self.joined = False
@@ -89,10 +30,8 @@ class LogicHandler(Connection):
             self.joined = new_game.join(self)
             GAMESTATES[self.game_id] = new_game
 
-
     def receive(self, data):
         GAMESTATES[self.game_id].move(self, data)
-
 
     def disconnect(self):
         try:
@@ -192,3 +131,62 @@ class GameState:
             moves=self.moves,
             winner=self.winner,
         ).save()
+
+
+def check_win(board, x, y):
+    a, b = max((0, x-3)), min((6, x+3)) + 1
+    c, d = max((0, y-3)), min((6, y+3)) + 1
+
+    line = 0
+
+    # Horizontal
+    for i in range(b - a):
+        if board[y][x] == board[y][a+i]:
+            line += 1
+
+            if line == 4:
+                return True
+
+        else:
+            line = 0
+
+    line = 0
+
+    # Vertical
+    for i in range(d - c):
+        if board[y][x] == board[c+i][x]:
+            line += 1
+
+            if line == 4:
+                return True
+
+        else:
+            line = 0
+
+    line = 0
+
+    # Diagonal 1
+    for i in range(min([b - a, d - c])):
+        if board[y][x] == board[c+i][a+i]:
+            line += 1
+
+            if line == 4:
+                return True
+
+        else:
+            line = 0
+
+    line = 0
+
+    # Diagonal 2
+    for i in range(min([b - a, d - c])):
+        if board[y][x] == board[c+i][b-i-2]:
+            line += 1
+
+            if line == 4:
+                return True
+
+        else:
+            line = 0
+
+    return False
